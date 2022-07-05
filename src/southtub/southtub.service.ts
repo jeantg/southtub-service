@@ -2,7 +2,6 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  NotFoundException,
   StreamableFile,
 } from '@nestjs/common';
 import { createReadStream, rmSync } from 'fs';
@@ -20,36 +19,26 @@ export class SouthtubService {
   async generateThumbnail(filename) {
     const caminho = join(process.cwd(), `videos/${filename}.mp4`);
 
-    fs.access(caminho, fs.F_OK, async (err) => {
-      if (err) {
-        console.error(err);
-        if (err.code === 'ENOENT') {
-          throw new HttpException(
-            'Arquivo não encontrado',
-            HttpStatus.NOT_FOUND,
-          );
-        }
-        throw new HttpException(
-          'Serviço indisponível, tente novamente mais tarde',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+    if (!fs.existsSync(caminho)) {
+      throw new HttpException(
+        'Arquivo não encontrado - Tente novamente',
+        HttpStatus.NOT_FOUND,
+      );
+    }
 
-      //file exists
-      console.log('caminho', caminho);
-      //file exists
-      await this.generateThumb(caminho);
-      return {
-        status: 'Vídeo sendo processado',
-      };
-    });
+    await this.generateThumb(caminho, filename);
+    return {
+      status: 'Vídeo sendo processado',
+    };
   }
 
-  generateThumb = async (caminho) => {
+  generateThumb = async (caminho, filename) => {
     await getVideoDurationInSeconds(caminho).then((duration) => {
       const durationLocal = Math.floor(duration / 60);
       console.log('durationLocaldurationLocal', durationLocal);
-      fs.mkdirSync(join(process.cwd(), `/content/final`), { recursive: true });
+      fs.mkdirSync(join(process.cwd(), `/content/final/${filename}`), {
+        recursive: true,
+      });
 
       for (
         let currentMatrice = 0;
@@ -81,9 +70,6 @@ export class SouthtubService {
           .on('error', function (err) {
             console.log('ERRO: ' + err.message);
           })
-          /* .on('progress', function (progress) {
-            console.log('-------> ' + progress.percent + '% done');
-          }) */
           .on('end', async () => {
             let files = [];
             for (let i = 0; i < 2; i++) {
@@ -108,7 +94,7 @@ export class SouthtubService {
               fs.writeFileSync(
                 join(
                   process.cwd(),
-                  `/content/final/final_${currentMatrice + 1}.png`,
+                  `/content/final/${filename}/final_${currentMatrice + 1}.png`,
                 ),
                 teste,
                 { encoding: 'base64' },
@@ -125,14 +111,24 @@ export class SouthtubService {
     });
   };
 
-  async getThumbnail(req) {
-    const path = req.filename;
-    console.log('getThumbnail ----> ', path);
-    const file = createReadStream(join(process.cwd(), 'package.json'));
-    /* return {
-      //file: join(process.cwd(), `/content/final/final_1.png`),
-      file: file,
-    }; */
-    return new StreamableFile(file);
+  async getThumbnail(filename) {
+    const path = join(process.cwd() + `/content/final/${filename}`);
+    const fileFirst = join(
+      process.cwd() + `/content/final/${filename}/final_1.png`,
+    );
+    if (!fs.existsSync(path) && !fs.existsSync(fileFirst)) {
+      throw new HttpException('Arquivo não encontrado', HttpStatus.NOT_FOUND);
+    }
+    /* const thumbArray = [];
+    fs.readdirSync(path).forEach((file) => {
+      thumbArray.push(
+        createReadStream(
+          join(process.cwd() + `/content/final/${filename}/${file}`),
+        ),
+      );
+    });
+    return thumbArray; */
+    const fileSample = createReadStream(fileFirst);
+    return new StreamableFile(fileSample);
   }
 }

@@ -15,8 +15,8 @@ export class SouthtubController {
 
   @Get('/thumbnail')
   async getThumbnail(
-    @Query('filename') email: string,
+    @Query('filename') filename: string,
   ): Promise<StreamableFile> {
-    return this.southtubService.getThumbnail(email);
+    return this.southtubService.getThumbnail(filename);
   }
 }
