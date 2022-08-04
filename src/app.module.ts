@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { SouthtubModule } from './southtub/southtub.module';
+import { VideoController } from './controllers/video.controller';
+import { VideoService } from './services/video.service';
 
 @Module({
-  imports: [SouthtubModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [],
+  controllers: [AppController, VideoController],
+  providers: [AppService, VideoService],
 })
 export class AppModule {}
