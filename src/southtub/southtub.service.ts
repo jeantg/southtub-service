@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { rmSync } from 'fs';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  StreamableFile
+} from '@nestjs/common';
+import { createReadStream, rmSync } from 'fs';
 import * as moment from 'moment';
 import { join } from 'path';
 var ffmpeg = require('fluent-ffmpeg');
-const caminho = join(process.cwd(), 'src/content/teste.mp4');
 const fs = require('fs');
 const mergeImages = require('merge-images');
 const { getVideoDurationInSeconds } = require('get-video-duration');
@@ -12,19 +16,29 @@ const targetDuration = moment.duration('00:00:00');
 
 @Injectable()
 export class SouthtubService {
-  async thumbnail() {
-    await this.generateThumb();
+  async generateThumbnail(filename) {
+    const caminho = join(process.cwd(), `videos/${filename}.mp4`);
 
+    if (!fs.existsSync(caminho)) {
+      throw new HttpException(
+        'Arquivo não encontrado - Tente novamente',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    await this.generateThumb(caminho, filename);
     return {
-      teste: 'teste',
+      status: 'Vídeo sendo processado',
     };
   }
 
-  generateThumb = async () => {
+  generateThumb = async (caminho, filename) => {
     await getVideoDurationInSeconds(caminho).then((duration) => {
       const durationLocal = Math.floor(duration / 60);
       console.log('durationLocaldurationLocal', durationLocal);
-      fs.mkdirSync(join(process.cwd(), `/content/final`), { recursive: true });
+      fs.mkdirSync(join(process.cwd(), `/content/final/${filename}`), {
+        recursive: true,
+      });
 
       for (
         let currentMatrice = 0;
@@ -56,9 +70,6 @@ export class SouthtubService {
           .on('error', function (err) {
             console.log('ERRO: ' + err.message);
           })
-          /* .on('progress', function (progress) {
-            console.log('-------> ' + progress.percent + '% done');
-          }) */
           .on('end', async () => {
             let files = [];
             for (let i = 0; i < 2; i++) {
@@ -83,7 +94,7 @@ export class SouthtubService {
               fs.writeFileSync(
                 join(
                   process.cwd(),
-                  `/content/final/final_${currentMatrice + 1}.png`,
+                  `/content/final/${filename}/final_${currentMatrice + 1}.png`,
                 ),
                 teste,
                 { encoding: 'base64' },
@@ -99,4 +110,25 @@ export class SouthtubService {
       }
     });
   };
+
+  async getThumbnail(filename) {
+    const path = join(process.cwd() + `/content/final/${filename}`);
+    const fileFirst = join(
+      process.cwd() + `/content/final/${filename}/final_1.png`,
+    );
+    if (!fs.existsSync(path) && !fs.existsSync(fileFirst)) {
+      throw new HttpException('Arquivo não encontrado', HttpStatus.NOT_FOUND);
+    }
+    /* const thumbArray = [];
+    fs.readdirSync(path).forEach((file) => {
+      thumbArray.push(
+        createReadStream(
+          join(process.cwd() + `/content/final/${filename}/${file}`),
+        ),
+      );
+    });
+    return thumbArray; */
+    const fileSample = createReadStream(fileFirst);
+    return new StreamableFile(fileSample);
+  }
 }

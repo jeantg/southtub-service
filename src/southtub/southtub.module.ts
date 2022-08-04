@@ -3,7 +3,7 @@ import { SouthtubController } from './southtub.controller';
 import { SouthtubService } from './southtub.service';
 
 @Module({
+  providers: [SouthtubService],
   controllers: [SouthtubController],
-  providers: [SouthtubService]
 })
 export class SouthtubModule {}
