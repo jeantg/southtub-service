@@ -25,9 +25,14 @@
     "@nestjs/core": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
     "@prisma/client": "^3.14.0",
+    "canvas": "^2.9.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "get-video-duration": "^4.1.0",
+    "merge-images": "^2.0.0",
+    "moment": "^2.29.3",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.5.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",

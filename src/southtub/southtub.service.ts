@@ -2,7 +2,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  StreamableFile,
+  StreamableFile
 } from '@nestjs/common';
 import { createReadStream, rmSync } from 'fs';
 import * as moment from 'moment';

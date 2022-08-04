@@ -1,6 +1,6 @@
 import { Controller, Get, Query, StreamableFile } from '@nestjs/common';
-import { SouthtubService } from './southtub.service';
 import { GenerateThumbnail } from './interfaces/thumbnail.interface';
+import { SouthtubService } from './southtub.service';
 
 @Controller('southtub')
 export class SouthtubController {
